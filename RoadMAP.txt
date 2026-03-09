@@ -22,7 +22,7 @@ Hardcode sample weekly routine to test endpoints.
 
 Milestone: Can query tasks and messages from server.
 
-Phase 2 — AI Integration (Gemini)
+Phase 2 — AI Integration (allam-2-7b)
 
 Goal: Make the agent respond intelligently.
 
@@ -32,7 +32,7 @@ Implement ai_agent.py to handle messages and generate responses.
 
 First: dummy AI responses (“AI says: …”)
 
-Next: integrate Gemini API for real responses.
+Next: integrate Groq API for real responses.
 
 Test storing user + AI messages in DB.
 
