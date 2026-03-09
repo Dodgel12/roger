@@ -1,0 +1,4 @@
+- Push notifications
+- Automatic message send
+- AI knows the time
+- Ollama Optimizations

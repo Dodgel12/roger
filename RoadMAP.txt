@@ -1,0 +1,227 @@
+Phase 1 — Core Server + Database
+
+Goal: Make the PC server functional with basic task management.
+
+Tasks:
+
+FastAPI endpoints:
+
+/tasks/today → fetch today’s tasks
+
+/tasks/done → mark task complete
+
+/messages → get all messages
+
+/messages POST → send a message to AI
+
+SQLite DB tables:
+
+tasks, messages, habits, weeks, skills, reflections
+
+Hardcode sample weekly routine to test endpoints.
+
+Milestone: Can query tasks and messages from server.
+
+Phase 2 — AI Integration (Gemini)
+
+Goal: Make the agent respond intelligently.
+
+Tasks:
+
+Implement ai_agent.py to handle messages and generate responses.
+
+First: dummy AI responses (“AI says: …”)
+
+Next: integrate Gemini API for real responses.
+
+Test storing user + AI messages in DB.
+
+Milestone: AI responds to messages and stores conversation.
+
+Phase 3 — Mobile App Basic UI
+
+Goal: Build a minimal chat app to communicate with the AI.
+
+Tasks:
+
+Expo app with ChatScreen + TasksScreen
+
+Axios API calls to server: fetch tasks, send messages, mark tasks done
+
+Display messages in scrollable chat window
+
+Display today’s tasks with simple buttons: “Done”
+
+Milestone: Mobile app communicates with server; basic chat + task tracking works.
+
+Phase 4 — Daily Lock-in & Reminders
+
+Goal: Add motivational and task reminder functionality.
+
+Tasks:
+
+Scheduler on server (FastAPI + apscheduler or asyncio)
+
+Daily morning lock-in message sent to app:
+
+“Good morning! Today’s tasks: …”
+
+Task reminders 10–15 min before task starts
+
+Optional: local push notifications via Expo
+
+Milestone: User receives AI daily plan and reminders on phone.
+
+Phase 5 — Task Completion Tracking & Streaks
+
+Goal: Track performance and encourage consistency.
+
+Tasks:
+
+Mark tasks as done → update habits table
+
+Track streaks for each habit
+
+Track daily/weekly discipline score:
+
+discipline_score = completed_tasks / planned_tasks
+
+Display streaks and discipline score in app
+
+Milestone: User can see streaks and progress; AI can reference it.
+
+Phase 6 — Weekly Reports & Analytics
+
+Goal: Give insights into performance.
+
+Tasks:
+
+Generate weekly report every Sunday:
+
+Completion %
+
+Best habit
+
+Weakest habit
+
+AI analysis and advice
+
+Store report in weeks table
+
+Display report in app or as AI chat message
+
+Milestone: AI provides weekly reflection and improvement advice.
+
+Phase 7 — Reflection Engine
+
+Goal: Collect user reflections and improve AI feedback.
+
+Tasks:
+
+Ask reflection questions every week:
+
+“What went well this week?”
+
+“What slowed you down?”
+
+Store answers in reflections table
+
+AI analyzes responses and gives feedback
+
+Milestone: AI becomes more personalized based on user input.
+
+Phase 8 — Skill Progress Tracking
+
+Goal: Track time spent per skill/habit.
+
+Tasks:
+
+Add skills table to track:
+
+hours practiced
+
+sessions completed
+
+Track per-task contribution to skills (Coding, Guitar, Blender, etc.)
+
+Show skill progress in app (optional simple graph or table)
+
+Milestone: User can see improvement over time.
+
+Phase 9 — Focus Mode
+
+Goal: Push user into concentrated work sessions.
+
+Tasks:
+
+Before a task: AI sends focus mode message:
+
+“Focus mode activated. Coding 2h. Eliminate distractions.”
+
+Optional timer tracking task duration
+
+Mark completion automatically when done
+
+Milestone: AI nudges user into productive work, increasing engagement.
+
+Phase 10 — Burnout Detection & Adaptive Motivation
+
+Goal: Detect drops in performance and adapt suggestions.
+
+Tasks:
+
+Track multi-week discipline scores
+
+If drop detected → AI sends motivational or recovery message:
+
+“Your performance dropped this week. Consider a lighter day tomorrow.”
+
+AI adjusts task reminders or suggests smaller goals for low-motivation days
+
+Milestone: AI adapts to user performance trends.
+
+Phase 11 — Adaptive Routine Suggestions
+
+Goal: Improve schedule based on patterns.
+
+Tasks:
+
+Detect repeated missed tasks
+
+Suggest better time slots:
+
+“Coding missed 4 Wednesdays. Try moving earlier.”
+
+Update tasks dynamically in server
+
+Milestone: AI improves routine for long-term discipline.
+
+Phase 12 — Optional Advanced Features
+
+WebSocket real-time push for reminders & messages
+
+Charts & dashboard for app: daily/weekly habit analytics
+
+Voice messages / TTS AI
+
+Offline caching in Expo app
+
+Calendar integration (Google Calendar)
+
+Sync with Notion / external tools
+
+Chronological Summary Table
+Phase	Focus	Milestone
+0	Planning & Setup	Project skeleton ready
+1	Server + DB	Endpoints return tasks & messages
+2	AI Integration	AI responds to user messages
+3	Mobile App Basic UI	Chat + tasks work
+4	Daily Lock-in & Reminders	Morning plan + reminders push
+5	Task Tracking & Streaks	Discipline score + streaks visible
+6	Weekly Reports	AI gives weekly insights
+7	Reflection Engine	AI uses user reflections to improve feedback
+8	Skill Tracking	Track hours/practice per skill
+9	Focus Mode	AI sends focused session nudges
+10	Burnout Detection	AI detects low performance, motivates
+11	Adaptive Routine	AI suggests better scheduling
+12	Advanced Features	Real-time push, charts, voice, calendar integration
