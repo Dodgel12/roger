@@ -1,3 +1,4 @@
 - Making the AI more intelligent 
 - adapt to the user
+- The build (APK) Can't comunicate with the server goddamnittttttttttt
 

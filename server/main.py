@@ -5,8 +5,17 @@ from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from exponent_server_sdk import PushClient, PushMessage, PushServerError
 from requests.exceptions import ConnectionError, HTTPError
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 messages = []
 
