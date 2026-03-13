@@ -1,2 +1,3 @@
-- Push notifications
-- Automatic message send
+- Making the AI more intelligent 
+- adapt to the user
+
