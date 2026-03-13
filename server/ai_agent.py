@@ -1,7 +1,9 @@
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
+
+TZ = timezone(timedelta(hours=1))  # CET is UTC+1
 
 load_dotenv()
 
@@ -10,7 +12,7 @@ MODEL_NAME = "allam-2-7b"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 def ask_roger(message: str) -> str:
-    now = datetime.now().strftime("%A, %d %B %Y %H:%M")
+    now = datetime.now(TZ).strftime("%A, %d %B %Y %H:%M %Z")
 
     if not GROQ_API_KEY:
         return "Error: GROQ_API_KEY not found in environment."
