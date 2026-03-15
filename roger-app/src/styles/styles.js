@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F8F9FA" },
   header: {
+    marginTop: 20,
     height: 60,
     flexDirection: "row",
     alignItems: "center",
@@ -59,6 +60,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderTopWidth: 1,
     borderTopColor: "#EEE",
+    marginBottom: 7
   },
   input: {
     flex: 1,
@@ -84,5 +86,125 @@ export const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: "#CCC",
+  },
+  
+  // Tab Bar Styles
+  tabBar: {
+    flexDirection: "row",
+    height: 60,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#EEE",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  tabItem: {
+    flex: 1,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#999",
+  },
+  tabTextActive: {
+    color: "#1A1A1A",
+    fontWeight: "800",
+  },
+  
+  // Tasks Screen Styles
+  tasksContainer: {
+    flex: 1,
+    backgroundColor: "#F8F9FA",
+  },
+  scoreCard: {
+    backgroundColor: "#1A1A1A",
+    margin: 16,
+    padding: 20,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  scoreTitle: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  scoreValue: {
+    color: "#FFF",
+    fontSize: 32,
+    fontWeight: "800",
+  },
+  taskList: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  taskCard: {
+    backgroundColor: "#FFF",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  taskCardDone: {
+    opacity: 0.6,
+    backgroundColor: "#FAFAFA",
+  },
+  taskCardActive: {
+    borderColor: "#1A1A1A",
+  },
+  taskInfo: {
+    flex: 1,
+  },
+  taskName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  taskNameDone: {
+    textDecorationLine: "line-through",
+    color: "#999",
+  },
+  taskTime: {
+    fontSize: 14,
+    color: "#666",
+  },
+  checkbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "#CCC",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 16,
+  },
+  checkboxDone: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#4CAF50",
+  },
+  checkmark: {
+    width: 12,
+    height: 12,
+    backgroundColor: "#FFF",
+    borderRadius: 6,
   }
 });

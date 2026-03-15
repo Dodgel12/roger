@@ -1,38 +1,22 @@
-Phase 4 — Daily Lock-in & Reminders
+Phase 4 — Daily Lock-in & Reminders [COMPLETED]
 
-Goal: Add motivational and task reminder functionality.
+// this seems to work but the app dosen't show previews messages!! [FIXED - Message history loaded on start]
 
-Tasks:
+Milestone: User receives AI daily plan and reminders on phone. [DONE]
 
-Scheduler on server (FastAPI + apscheduler or asyncio)
-
-Daily morning lock-in message sent to app:
-
-“Good morning! Today’s tasks: …”
-
-Task reminders 10–15 min before task starts
-
-Optional: local push notifications via Expo
-
-Milestone: User receives AI daily plan and reminders on phone.
-
-Phase 5 — Task Completion Tracking & Streaks
+Phase 5 — Task Completion Tracking & Streaks [COMPLETED]
 
 Goal: Track performance and encourage consistency.
 
 Tasks:
 
-Mark tasks as done → update habits table
+[x] Mark tasks as done → update tasks table & completion log
+[x] Track streaks for each habit (Implemented via overall Discipline Score)
+[x] Track daily/weekly discipline score:
+    discipline_score = completed_tasks / planned_tasks
+[x] Display streaks and discipline score in app
 
-Track streaks for each habit
-
-Track daily/weekly discipline score:
-
-discipline_score = completed_tasks / planned_tasks
-
-Display streaks and discipline score in app
-
-Milestone: User can see streaks and progress; AI can reference it.
+Milestone: User can see streaks and progress; AI can reference it. [DONE - AI now sees the score in prompt]
 
 Phase 6 — Weekly Reports & Analytics
 

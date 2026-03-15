@@ -2,6 +2,7 @@ import os
 import requests
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
+from database import get_all_tasks, get_today_stats
 
 TZ = timezone(timedelta(hours=1))  # CET is UTC+1
 
@@ -11,13 +12,43 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL_NAME = "allam-2-7b"
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
+def build_schedule_string() -> str:
+    """Build a compact schedule string from live DB data."""
+    schedule = get_all_tasks()
+    if not schedule:
+        return "No tasks currently scheduled."
+
+    lines = []
+    day_abbr = {
+        "Monday": "Mon", "Tuesday": "Tue", "Wednesday": "Wed",
+        "Thursday": "Thu", "Friday": "Fri", "Saturday": "Sat", "Sunday": "Sun"
+    }
+    for day, tasks in schedule.items():
+        task_parts = [f"{name} {start} {dur}" for name, start, dur in tasks]
+        lines.append(f"{day_abbr.get(day, day)}: {', '.join(task_parts)}")
+    return "\n".join(lines)
+
+def build_stats_string() -> str:
+    """Build a string showing today's task discipline score."""
+    stats = get_today_stats()
+    planned = stats["planned"]
+    completed = stats["completed"]
+    if planned == 0:
+        return "No tasks scheduled for today."
+    
+    percent = int(stats["score"] * 100)
+    return f"Today's completion: {completed}/{planned} tasks ({percent}%)"
+
 def ask_roger(message: str) -> str:
     now = datetime.now(TZ).strftime("%A, %d %B %Y %H:%M %Z")
 
     if not GROQ_API_KEY:
         return "Error: GROQ_API_KEY not found in environment."
 
-    # Full routine included
+    # Build live schedule from DB
+    schedule = build_schedule_string()
+    stats_str = build_stats_string()
+
     prompt = f"""
 You are Roger, a strict accountability coach.
 
@@ -27,18 +58,14 @@ RULES:
 - Base your advice on the current time and user's schedule.
 
 Current time: {now}
+{stats_str}
 
 User routine:
-Mon: Coding 15:00-17:00 2H, Workout 17:15-18:45 1.5H, Content 19:00-19:30 30m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
-Tue: Coding 15:00-17:00 2H, Workout 17:15-18:45 1.5H, Content 19:00-19:30 30m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
-Wed: Coding 15:00-17:00 2H, Workout 17:15-18:45 1.5H, Content 19:00-19:45 45m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
-Thu: Baking 15:30-16:45 1H15, Coding 17:00-19:00 2H, Workout 19:15-20:45 1.5H, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
-Fri: Coding 15:00-17:00 2H, Workout 17:15-18:45 1.5H, Content 19:00-19:30 30m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
-Sat: Coding 15:00-17:00 2H, Workout 17:15-18:45 1.5H, Singing 18:45-19:30 45m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H, Content 22:30-22:50 20m
-Sun: Coding 10:00-12:00 2H, Workout 14:00-15:30 1.5H, Singing 15:30-16:15 45m, Baking/Cooking 16:30-17:45 1H15, Content 18:00-18:45 45m, Guitar 20:30-21:30 1H, Blender 21:30-22:30 1H
+{schedule}
 
 User message: {message}
 """
+
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -52,7 +79,7 @@ User message: {message}
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.5,
-        "max_tokens": 200  # limit output length to reduce token usage
+        "max_tokens": 200
     }
 
     try:

@@ -18,27 +18,49 @@ import Header from "./src/components/Header";
 import MessageBubble from "./src/components/MessageBubble";
 import ChatInput from "./src/components/ChatInput";
 import ThinkingIndicator from "./src/components/ThinkingIndicator";
+import TasksScreen from "./src/components/TasksScreen";
+import { TouchableOpacity, Text } from "react-native";
 
 // Initialize notification configuration
 configureNotifications();
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState("chat");
   const [serverUrl, setServerUrl] = useState("https://subporphyritic-venomless-delores.ngrok-free.dev");
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef();
   const notificationListener = useRef();
+  const tapListener = useRef();
+
+  const loadChatHistory = async (url) => {
+    try {
+      const res = await axios.get(`${url}/messages?limit=100`);
+      const history = res.data.map(msg => ({
+        role: msg.role,
+        text: msg.content,
+        time: new Date(msg.time),
+      }));
+      setChat(history);
+    } catch (err) {
+      console.warn("Could not load chat history:", err.message);
+    }
+  };
 
   useEffect(() => {
+    const currentServerUrl = "https://subporphyritic-venomless-delores.ngrok-free.dev";
+
     const initializeNetworkAndPush = async () => {
-      let currentServerUrl = "https://subporphyritic-venomless-delores.ngrok-free.dev";
       try {
-        const networkState = await Network.getNetworkStateAsync();
+        await Network.getNetworkStateAsync();
         setServerUrl(currentServerUrl);
       } catch (err) {
         console.warn("Network check failed", err);
       }
+
+      // Load persisted chat history
+      await loadChatHistory(currentServerUrl);
 
       const token = await registerForPushNotificationsAsync();
       if (token) {
@@ -49,13 +71,22 @@ export default function App() {
 
     initializeNetworkAndPush();
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      // Potentially refresh chat here if notifications contain message data
+    // Refresh chat when a push notification arrives
+    notificationListener.current = Notifications.addNotificationReceivedListener(() => {
+      loadChatHistory(currentServerUrl);
+    });
+
+    // Refresh chat when user taps a notification
+    tapListener.current = Notifications.addNotificationResponseReceivedListener(() => {
+      loadChatHistory(currentServerUrl);
     });
 
     return () => {
       if (notificationListener.current) {
         Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (tapListener.current) {
+        Notifications.removeNotificationSubscription(tapListener.current);
       }
     };
   }, []);
@@ -104,30 +135,50 @@ export default function App() {
       <StatusBar barStyle="dark-content" />
       <Header />
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={chat}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => <MessageBubble {...item} />}
-          contentContainerStyle={styles.chatList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
+      {activeTab === "chat" ? (
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={chat}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => <MessageBubble {...item} />}
+            contentContainerStyle={styles.chatList}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          />
 
-        {loading && chat[chat.length - 1]?.text === "" && <ThinkingIndicator />}
+          {loading && chat[chat.length - 1]?.text === "" && <ThinkingIndicator />}
 
-        <ChatInput 
-          message={message} 
-          setMessage={setMessage} 
-          sendMessage={sendMessage} 
-          loading={loading} 
-        />
-      </KeyboardAvoidingView>
+          <ChatInput 
+            message={message} 
+            setMessage={setMessage} 
+            sendMessage={sendMessage} 
+            loading={loading} 
+          />
+        </KeyboardAvoidingView>
+      ) : (
+        <TasksScreen serverUrl={serverUrl} />
+      )}
+
+      <View style={styles.tabBar}>
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab("chat")}
+        >
+          <Text style={[styles.tabText, activeTab === "chat" && styles.tabTextActive]}>💬 Chat</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab("tasks")}
+        >
+          <Text style={[styles.tabText, activeTab === "tasks" && styles.tabTextActive]}>✅ Tasks</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
