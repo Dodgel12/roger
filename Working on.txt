@@ -1,4 +1,5 @@
 - Making the AI more intelligent 
 - adapt to the user
-- The build (APK) Can't comunicate with the server goddamnittttttttttt
+- The three actions icon stil show up even tho i updated the app.json, in expo go
+it works correctly might be a problem with the builded apk need to investigate
 
