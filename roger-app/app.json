@@ -1,5 +1,9 @@
 {
   "expo": {
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "backgroundColor": "#00000000" 
+    },
     "name": "roger-app",
     "slug": "roger-app",
     "version": "1.0.0",
