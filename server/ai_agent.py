@@ -78,6 +78,3 @@ User message: {message}
         return f"Roger is unavailable (API Error {response.status_code})."
     except Exception as e:
         return f"Roger is unavailable right now. Unexpected Error: {str(e)}"
-
-if __name__ == "__main__":
-    print(ask_roger("Hello Roger, what's our focus now?"))

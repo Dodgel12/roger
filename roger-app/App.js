@@ -16,6 +16,7 @@ import axios from "axios";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { Ionicons } from '@expo/vector-icons';
+import * as Network from 'expo-network';
 
 // Notification configuration
 Notifications.setNotificationHandler({
@@ -76,7 +77,7 @@ const MessageBubble = ({ role, text, time }) => {
 };
 
 export default function App() {
-  const SERVER = "http://192.168.1.56:8000";
+  const [serverUrl, setServerUrl] = useState("https://subporphyritic-venomless-delores.ngrok-free.dev");
 
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
@@ -87,12 +88,31 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
+    const initializeNetworkAndPush = async () => {
+      let currentServerUrl = "https://subporphyritic-venomless-delores.ngrok-free.dev";
+      try {
+        const networkState = await Network.getNetworkStateAsync();
+        
+        // If the phone is on Mobile Data / Internet (not local WiFi), switch to a public URL.
+        // NOTE: Commented out because "https://your-public-api-url.com" is just a placeholder, 
+        // and sometimes physical devices incorrectly report connected network type.
+        // if (networkState.type === Network.NetworkStateType.CELLULAR || networkState.type !== Network.NetworkStateType.WIFI) {
+        //   currentServerUrl = "https://your-public-api-url.com"; // Replace with real public URL!
+        // }
+        
+        setServerUrl(currentServerUrl);
+      } catch (err) {
+        console.warn("Network check failed", err);
+      }
+
+      const token = await registerForPushNotificationsAsync();
       if (token) {
-        axios.post(`${SERVER}/register-push-token`, { token })
+        axios.post(`${currentServerUrl}/register-push-token`, { token })
           .catch(err => console.error("Error registering token:", err));
       }
-    });
+    };
+
+    initializeNetworkAndPush();
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       // Potentially refresh chat here if notifications contain message data
@@ -116,7 +136,7 @@ export default function App() {
     setChat(prev => [...prev, { role: "roger", text: "", time: new Date() }]);
 
     try {
-      const response = await axios.post(`${SERVER}/chat`, { message: userMessage });
+      const response = await axios.post(`${serverUrl}/chat`, { message: userMessage });
       const finalText = response.data.response;
 
       // Fake streaming effect for visual flair
@@ -134,7 +154,7 @@ export default function App() {
     } catch (err) {
       setChat(prev => {
         const updated = [...prev];
-        updated[updated.length - 1].text = "Roger is unavailable right now.";
+        updated[updated.length - 1].text = `Roger is unavailable right now.\n\nDebug: ${err.message} (${serverUrl})`;
         return updated;
       });
     } finally {
