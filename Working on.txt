@@ -1,3 +1,5 @@
+- push notification not working correctly as as stand alone app, need to configure a firebase token to be able
+to redirect when clicking to the actual app isntead of expo go :( :( :( :( 
 - Making the AI more intelligent 
 - adapt to the user
 - The three actions icon stil show up even tho i updated the app.json, in expo go

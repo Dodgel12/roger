@@ -40,7 +40,10 @@ export async function registerForPushNotificationsAsync() {
       console.error('Project ID not found');
       return;
     }
-    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    token = (await Notifications.getExpoPushTokenAsync({ 
+      projectId,
+      experienceId: '@anonymous/roger-app'
+    })).data;
   } catch (e) {
     console.error("Error getting push token:", e);
   }

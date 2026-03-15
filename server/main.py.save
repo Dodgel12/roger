@@ -31,12 +31,7 @@ def send_push_notification(title, message):
 
     try:
         response = PushClient().publish(
-            PushMessage(
-                to=token, 
-                title=title, 
-                body=message,
-                data={"experienceId": "@anonymous/roger-app"}
-            )
+            PushMessage(to=token, title=title, body=message)
         )
     except (PushServerError, ConnectionError, HTTPError) as exc:
         print(f"Failed to send push notification: {exc}")
@@ -104,29 +99,21 @@ async def register_push_token(data: dict):
 # --------------------------
 def generate_daily_lockin():
     """Send daily tasks overview at scheduled times."""
-
     day_name = datetime.now().strftime("%A")
     tasks = get_tasks_for_day(day_name)
 
-    prompt_message = (
-        f"Give me a strict, motivating message to keep the user accountable "
-        f"for their tasks today {tasks}. Max 4 sentences."
-    )
+    if not tasks:
+        msg = "No tasks for today."
+    else:
+        msg = "Today's focus:"
+        for t in tasks:
+            msg += f"• {t[0]} ({t[1]})\n"
+        msg += "\nLock in!"
 
-    answer = ask_roger(prompt_message)
-
-    full_msg = f"Daily lock-in ({datetime.now().strftime('%H:%M:%S')}): {answer}"
-
-    save_message("roger", full_msg)
-
-    send_push_notification(
-        "Roger: Daily Focus",
-        full_msg
-    )
-
-    save_message("roger", answer)
-
+    save_message("roger", msg)
+    send_push_notification("Roger: Daily Focus", msg)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Daily lock-in sent.")
+
 # --------------------------
 # Morning motivational quote
 # --------------------------
@@ -138,7 +125,7 @@ def generate_morning_quote():
     # Sunday 9:00, other days 6:15
     scheduled_time = "9:00" if weekday == 6 else "6:15"
 
-    prompt_message = "Give me a short, strict, motivating quote to start the day. Max 2 sentences."
+    prompt_message = "Give me a short, strict, motivating quote to start the day."
 
     quote = ask_roger(prompt_message)
     full_msg = f"Morning motivation ({scheduled_time}): {quote}"
@@ -146,18 +133,17 @@ def generate_morning_quote():
     save_message("roger", full_msg)
     send_push_notification("Roger: Morning Motivation", quote)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Morning quote sent.")
+
 # --------------------------
 # Scheduler setup
 # --------------------------
 scheduler = BackgroundScheduler()
 
-# Daily lock-ins at 07:30, 14:50, 19:30, 17:15, 20:30
+# Daily lock-ins at 07:30, 14:50, 19:30, 17:15
 scheduler.add_job(generate_daily_lockin, 'cron', hour=7, minute=30)
 scheduler.add_job(generate_daily_lockin, 'cron', hour=14, minute=50)
 scheduler.add_job(generate_daily_lockin, 'cron', hour=19, minute=30)
 scheduler.add_job(generate_daily_lockin, 'cron', hour=17, minute=15)
-scheduler.add_job(generate_daily_lockin, 'cron', hour=20, minute=30)
-scheduler.add_job(generate_daily_lockin, 'cron', hour=21, minute=5)
 
 # Morning motivational quotes
 scheduler.add_job(generate_morning_quote, 'cron', hour=6, minute=15)  # Mon-Sat

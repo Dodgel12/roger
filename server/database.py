@@ -197,3 +197,4 @@ def get_push_token():
     result = cursor.fetchone()
     conn.close()
     return result["value"] if result else None
+

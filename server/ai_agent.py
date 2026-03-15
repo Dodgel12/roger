@@ -78,8 +78,8 @@ User message: {message}
             {"role": "system", "content": "You are Roger, a strict accountability coach."},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.5,
-        "max_tokens": 200
+        "temperature": 0.7,
+        "max_tokens": 400
     }
 
     try:
