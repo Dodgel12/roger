@@ -304,3 +304,4 @@ def get_recent_reflections(limit: int = 3):
     conn.close()
     return [dict(r) for r in rows]
 
+

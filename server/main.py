@@ -169,6 +169,26 @@ def generate_morning_quote():
     save_message("roger", full_msg)
     send_push_notification("Roger: Morning Motivation", quote)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Morning quote sent.")
+
+# -------------------------
+# Wind Down quote
+# -------------------------
+def generate_wind_down_quote():
+    """Send a wind down quote using Roger."""
+    now = datetime.now()
+    weekday = now.weekday()  # Monday=0 ... Sunday=6
+
+    # Sunday 9:00, other days 6:15
+    scheduled_time = "23:00" if weekday == 5 else "22:15"
+
+    prompt_message = "Give me a wind down quote, short to show the importance of resting."
+
+    quote = ask_roger(prompt_message)
+    full_msg = f"wind down quote: ({scheduled_time}): {quote}"
+
+    save_message("roger", full_msg)
+    send_push_notification("Roger: Wind Down Quote: ", quote)
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Morning quote sent.")
 # --------------------------
 # Weekly report
 # --------------------------
@@ -219,6 +239,9 @@ scheduler.add_job(generate_daily_lockin, 'cron', hour=21, minute=5)
 scheduler.add_job(generate_morning_quote, 'cron', hour=6, minute=15)  # Mon-Sat
 scheduler.add_job(generate_morning_quote, 'cron', day_of_week='sun', hour=9, minute=0)  # Sunday
 
+# Wind down quotes
+scheduler.add_job(generate_wind_down_quote, 'cron', hour=22, minute=30)
+
 # Weekly Report
 scheduler.add_job(generate_weekly_report, 'cron', day_of_week='sun', hour=18, minute=0)
 
@@ -229,3 +252,4 @@ scheduler.add_job(generate_reflection_reminder, 'cron', day_of_week='sun', hour=
 scheduler.add_job(reset_daily_tasks, 'cron', hour=0, minute=0)
 
 scheduler.start()
+

@@ -1,11 +1,27 @@
-nohup: ignoring input
 /etc/timezone is deprecated in some distros, and no longer reliable. tzlocal is ignoring it, and you can likely delete it.
-INFO:     Started server process [935145]
+INFO:     Started server process [3246067]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [935145]
-Terminated
+INFO:     82.49.153.171:0 - "GET /messages?limit=100 HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "POST /tasks/189/complete HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "POST /tasks/190/complete HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "POST /tasks/191/complete HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "POST /chat HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /messages?limit=100 HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /tasks/today HTTP/1.1" 200 OK
+INFO:     82.49.153.171:0 - "GET /stats/today HTTP/1.1" 200 OK

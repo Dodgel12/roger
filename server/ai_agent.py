@@ -121,3 +121,4 @@ User message: {message}
         return f"Roger is unavailable (API Error {response.status_code})."
     except Exception as e:
         return f"Roger is unavailable right now. Unexpected Error: {str(e)}"
+
