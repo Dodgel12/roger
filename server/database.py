@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "roger.db")
 
@@ -43,6 +43,25 @@ def init_db():
             task_id INTEGER NOT NULL,
             task_name TEXT NOT NULL,
             completed_date TEXT NOT NULL
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS weeks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            completion_pct REAL,
+            best_habit TEXT,
+            weakest_habit TEXT,
+            ai_advice TEXT
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reflections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            went_well TEXT NOT NULL,
+            slowed_down TEXT NOT NULL,
+            timestamp TEXT NOT NULL
         )
     """)
     conn.commit()
@@ -197,4 +216,91 @@ def get_push_token():
     result = cursor.fetchone()
     conn.close()
     return result["value"] if result else None
+
+# --------------------------
+# Weekly Reports
+# --------------------------
+def get_weekly_stats():
+    """Return aggregated stats for the past 7 days."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Total scheduled per habit per week (from tasks table)
+    cursor.execute("SELECT name, COUNT(*) as scheduled FROM tasks GROUP BY name")
+    scheduled_rows = cursor.fetchall()
+    scheduled_map = {r["name"]: r["scheduled"] for r in scheduled_rows}
+    
+    # 2. Total completed per habit in the last 7 days
+    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+    
+    cursor.execute(
+        "SELECT task_name, COUNT(*) as completed FROM completions WHERE completed_date >= ? GROUP BY task_name",
+        (seven_days_ago,)
+    )
+    completed_rows = cursor.fetchall()
+    completed_map = {r["task_name"]: r["completed"] for r in completed_rows}
+    
+    conn.close()
+    
+    total_scheduled = sum(scheduled_map.values())
+    total_completed = 0
+    best_habit = ("None", -1.0) # name, pct
+    weakest_habit = ("None", 2.0) # name, pct
+    
+    for name, sched in scheduled_map.items():
+        comp = completed_map.get(name, 0)
+        total_completed += comp
+        pct = comp / sched if sched > 0 else 0.0
+        
+        if pct > best_habit[1]:
+            best_habit = (name, pct)
+        if pct < weakest_habit[1]:
+            weakest_habit = (name, pct)
+            
+    overall_pct = total_completed / total_scheduled if total_scheduled > 0 else 0.0
+    
+    return {
+        "start_date": seven_days_ago,
+        "end_date": datetime.now().strftime("%Y-%m-%d"),
+        "completion_pct": overall_pct,
+        "best_habit": best_habit[0] if total_scheduled > 0 else "None",
+        "weakest_habit": weakest_habit[0] if total_scheduled > 0 else "None",
+    }
+
+def save_weekly_report(start_date, end_date, completion_pct, best_habit, weakest_habit, ai_advice):
+    """Persist a weekly report to the database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO weeks (start_date, end_date, completion_pct, best_habit, weakest_habit, ai_advice) VALUES (?, ?, ?, ?, ?, ?)",
+        (start_date, end_date, completion_pct, best_habit, weakest_habit, ai_advice)
+    )
+    conn.commit()
+    conn.close()
+
+# --------------------------
+# Reflections
+# --------------------------
+def save_reflection(went_well: str, slowed_down: str):
+    """Save a weekly reflection."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO reflections (went_well, slowed_down, timestamp) VALUES (?, ?, ?)",
+        (went_well, slowed_down, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    )
+    conn.commit()
+    conn.close()
+
+def get_recent_reflections(limit: int = 3):
+    """Get the most recent reflections to provide context to the AI."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT went_well, slowed_down, timestamp FROM reflections ORDER BY id DESC LIMIT ?",
+        (limit,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 

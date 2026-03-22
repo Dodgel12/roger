@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
-from database import get_all_tasks, get_today_stats
+from database import get_all_tasks, get_today_stats, get_recent_reflections
 
 TZ = timezone(timedelta(hours=1))  # CET is UTC+1
 
@@ -39,6 +39,17 @@ def build_stats_string() -> str:
     percent = int(stats["score"] * 100)
     return f"Today's completion: {completed}/{planned} tasks ({percent}%)"
 
+def build_reflections_string() -> str:
+    """Build a string from recent reflections for AI context."""
+    reflections = get_recent_reflections(3)
+    if not reflections:
+        return "No past reflections available yet."
+    
+    parts = []
+    for r in reflections:
+        parts.append(f"- On {r['timestamp']}: 'Went well: {r['went_well']}', 'Slowed down: {r['slowed_down']}'")
+    return "\n".join(parts)
+
 def ask_roger(message: str) -> str:
     now = datetime.now(TZ).strftime("%A, %d %B %Y %H:%M %Z")
 
@@ -48,6 +59,7 @@ def ask_roger(message: str) -> str:
     # Build live schedule from DB
     schedule = build_schedule_string()
     stats_str = build_stats_string()
+    reflections_str = build_reflections_string()
 
     prompt = f"""
 You are Roger, a strict accountability coach.
@@ -56,9 +68,13 @@ RULES:
 - Only output the final answer. NOTHING ELSE.
 - Max 4 sentences. Be concise, motivating, strict.
 - Base your advice on the current time and user's schedule.
+- Use the user's past reflections to give highly personalized, targeted advice.
 
 Current time: {now}
 {stats_str}
+
+User's past reflections:
+{reflections_str}
 
 User routine:
 {schedule}

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from ai_agent import ask_roger
-from database import init_db, get_tasks_for_day, save_push_token, get_push_token, save_message, get_messages, get_tasks_for_today, complete_task, get_today_stats, reset_daily_tasks
+from database import init_db, get_tasks_for_day, save_push_token, get_push_token, save_message, get_messages, get_tasks_for_today, complete_task, get_today_stats, reset_daily_tasks, get_weekly_stats, save_weekly_report, save_reflection
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from exponent_server_sdk import PushClient, PushMessage, PushServerError
@@ -100,6 +100,29 @@ async def register_push_token(data: dict):
     return {"status": "success"}
 
 # --------------------------
+# Reflections
+# --------------------------
+@app.post("/reflect")
+async def handle_reflection(data: dict):
+    went_well = data.get("went_well", "")
+    slowed_down = data.get("slowed_down", "")
+    
+    if not went_well or not slowed_down:
+        raise HTTPException(status_code=400, detail="Both reflection fields are required.")
+        
+    save_reflection(went_well, slowed_down)
+    
+    prompt = f"I just completed my weekly reflection.\nWhat went well: {went_well}\nWhat slowed me down: {slowed_down}\nGive me a 3-4 sentence hard-hitting, strict coaching analysis. Do NOT use bullet points or numbered lists. Tell me exactly what I need to fix to eliminate distractions, and how to double down on what went well."
+    
+    response = ask_roger(prompt)
+    
+    # Save the feedback into chat messages
+    save_message("user", f"Reflected: Went well: {went_well}. Slowed down: {slowed_down}")
+    save_message("roger", response)
+    
+    return {"status": "success", "response": response}
+
+# --------------------------
 # Daily lock-in / tasks
 # --------------------------
 def generate_daily_lockin():
@@ -147,6 +170,39 @@ def generate_morning_quote():
     send_push_notification("Roger: Morning Motivation", quote)
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Morning quote sent.")
 # --------------------------
+# Weekly report
+# --------------------------
+def generate_weekly_report():
+    """Send a weekly performance report and AI analysis."""
+    stats = get_weekly_stats()
+    start_date = stats["start_date"]
+    end_date = stats["end_date"]
+    pct = int(stats["completion_pct"] * 100)
+    best = stats["best_habit"]
+    weakest = stats["weakest_habit"]
+    
+    prompt = f"User's weekly completion is {pct}%. Best habit: {best}. Weakest habit: {weakest}. Give a 4-sentence strict, motivating weekly reflection and improvement advice."
+    
+    ai_advice = ask_roger(prompt)
+    
+    save_weekly_report(start_date, end_date, stats["completion_pct"], best, weakest, ai_advice)
+    
+    full_msg = f"Weekly Report ({start_date} to {end_date}):\nOverall Completion: {pct}%\nBest Habit: {best}\nWeakest Habit: {weakest}\n\nRoger's Analysis:\n{ai_advice}"
+    
+    save_message("roger", full_msg)
+    send_push_notification("Roger: Your Weekly Review is ready", full_msg)
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Weekly report sent.")
+
+# --------------------------
+# Reflection reminder
+# --------------------------
+def generate_reflection_reminder():
+    """Remind user to reflect every Sunday."""
+    msg = "It's time for your weekly reflection. Head to the Reflect tab to track your thoughts."
+    save_message("roger", msg)
+    send_push_notification("Roger: Weekly Reflection", msg)
+
+# --------------------------
 # Scheduler setup
 # --------------------------
 scheduler = BackgroundScheduler()
@@ -162,6 +218,12 @@ scheduler.add_job(generate_daily_lockin, 'cron', hour=21, minute=5)
 # Morning motivational quotes
 scheduler.add_job(generate_morning_quote, 'cron', hour=6, minute=15)  # Mon-Sat
 scheduler.add_job(generate_morning_quote, 'cron', day_of_week='sun', hour=9, minute=0)  # Sunday
+
+# Weekly Report
+scheduler.add_job(generate_weekly_report, 'cron', day_of_week='sun', hour=18, minute=0)
+
+# Reflection Reminder
+scheduler.add_job(generate_reflection_reminder, 'cron', day_of_week='sun', hour=10, minute=0)
 
 # Reset tasks completion at midnight every day
 scheduler.add_job(reset_daily_tasks, 'cron', hour=0, minute=0)

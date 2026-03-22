@@ -19,6 +19,7 @@ import MessageBubble from "./src/components/MessageBubble";
 import ChatInput from "./src/components/ChatInput";
 import ThinkingIndicator from "./src/components/ThinkingIndicator";
 import TasksScreen from "./src/components/TasksScreen";
+import ReflectionScreen from "./src/components/ReflectionScreen";
 import { TouchableOpacity, Text } from "react-native";
 
 // Initialize notification configuration
@@ -135,7 +136,7 @@ export default function App() {
       <StatusBar barStyle="dark-content" />
       <Header />
 
-      {activeTab === "chat" ? (
+      {activeTab === "chat" && (
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardView}
@@ -160,8 +161,18 @@ export default function App() {
             loading={loading} 
           />
         </KeyboardAvoidingView>
-      ) : (
+      )}
+      {activeTab === "tasks" && (
         <TasksScreen serverUrl={serverUrl} />
+      )}
+      {activeTab === "reflect" && (
+        <ReflectionScreen 
+          serverUrl={serverUrl} 
+          onSubmit={() => {
+            setActiveTab("chat");
+            loadChatHistory(serverUrl);
+          }} 
+        />
       )}
 
       <View style={styles.tabBar}>
@@ -177,6 +188,13 @@ export default function App() {
           onPress={() => setActiveTab("tasks")}
         >
           <Text style={[styles.tabText, activeTab === "tasks" && styles.tabTextActive]}>✅ Tasks</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.tabItem} 
+          onPress={() => setActiveTab("reflect")}
+        >
+          <Text style={[styles.tabText, activeTab === "reflect" && styles.tabTextActive]}>🧠 Reflect</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
