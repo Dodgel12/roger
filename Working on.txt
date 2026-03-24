@@ -4,4 +4,5 @@ to redirect when clicking to the actual app isntead of expo go :( :( :( :(
 - adapt to the user
 - The three actions icon stil show up even tho i updated the app.json, in expo go
 it works correctly might be a problem with the builded apk need to investigate
-
+- push notifications sent give me 2 messages in the main chat tab
+- the task memory doesn't seem to work correctly, it says different tasks from the day I'm on 
