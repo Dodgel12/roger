@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import axios from 'axios';
+import { createAuthenticatedClient } from '../services/authService';
 
 const ReflectionScreen = ({ serverUrl, onSubmit }) => {
   const [wentWell, setWentWell] = useState('');
@@ -15,7 +15,8 @@ const ReflectionScreen = ({ serverUrl, onSubmit }) => {
     
     setLoading(true);
     try {
-      await axios.post(`${serverUrl}/reflect`, {
+      const client = await createAuthenticatedClient(serverUrl);
+      await client.post("/reflect", {
         went_well: wentWell,
         slowed_down: slowedDown
       });
@@ -98,6 +99,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  textArea: {
+    backgroundColor: '#f1f3f5',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    padding: 12,
+    height: 120,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    marginBottom: 24,
+    color: '#1a1a1a',
+  },
+  submitBtn: {
+    backgroundColor: '#1a1a1a',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  disabledBtn: {
+    backgroundColor: '#ccc',
+  },
+  submitBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});
+
+export default ReflectionScreen;
   },
   textArea: {
     backgroundColor: '#f5f5f5',

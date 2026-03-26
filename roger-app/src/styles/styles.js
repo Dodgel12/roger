@@ -206,5 +206,90 @@ export const styles = StyleSheet.create({
     height: 12,
     backgroundColor: "#FFF",
     borderRadius: 6,
-  }
+  },
+
+  // Login Screen Styles
+  loginContainer: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    backgroundColor: "#F8F9FA",
+  },
+  loginHeader: {
+    alignItems: "center",
+    marginTop: 60,
+  },
+  loginTitle: {
+    fontSize: 48,
+    fontWeight: "800",
+    color: "#1A1A1A",
+    marginBottom: 8,
+  },
+  loginSubtitle: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "600",
+  },
+  loginForm: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  loginInput: {
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    marginBottom: 16,
+    color: "#1A1A1A",
+  },
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 14,
+    marginBottom: 12,
+    fontWeight: "600",
+  },
+  authButton: {
+    backgroundColor: "#1A1A1A",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  authButtonDisabled: {
+    backgroundColor: "#CCC",
+  },
+  authButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  toggleText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  toggleButton: {
+    color: "#1A1A1A",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  loginFooter: {
+    alignItems: "center",
+    paddingBottom: 20,
+  },
+  footerText: {
+    color: "#999",
+    fontSize: 12,
+    marginBottom: 4,
+    fontStyle: "italic",
+  },
 });

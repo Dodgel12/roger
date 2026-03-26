@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import { createAuthenticatedClient } from '../services/authService';
 import { styles } from '../styles/styles';
 
-const TasksScreen = ({ serverUrl }) => {
+const TasksScreen = ({ serverUrl, createAuthenticatedClient: authenticatedClientFactory, onCreateTask, onTaskCreated }) => {
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState({ planned: 0, completed: 0, score: 0 });
   const [loading, setLoading] = useState(true);
 
   const fetchTasksAndStats = async () => {
     try {
+      const client = await createAuthenticatedClient(serverUrl);
       const [tasksRes, statsRes] = await Promise.all([
-        axios.get(`${serverUrl}/tasks/today`),
-        axios.get(`${serverUrl}/stats/today`)
+        client.get("/tasks/today"),
+        client.get("/stats/today")
       ]);
-      setTasks(tasksRes.data);
+      setTasks(tasksRes.data.tasks || []);
       setStats(statsRes.data);
     } catch (err) {
-      console.warn("Failed to fetch tasks/stats:", err.message);
+      if (err.response?.status === 401) {
+        console.warn("Failed to fetch tasks/stats - Authentication error (401). Token may be invalid or expired.");
+      } else {
+        console.warn("Failed to fetch tasks/stats:", err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -34,7 +39,8 @@ const TasksScreen = ({ serverUrl }) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: true } : t));
     
     try {
-      const res = await axios.post(`${serverUrl}/tasks/${taskId}/complete`);
+      const client = await createAuthenticatedClient(serverUrl);
+      const res = await client.post(`/tasks/${taskId}/complete`);
       setStats(res.data.stats); // Update score from server response
     } catch (err) {
       console.warn("Failed to complete task:", err.message);
@@ -76,6 +82,12 @@ const TasksScreen = ({ serverUrl }) => {
           </Text>
         )}
       </View>
+
+      {onCreateTask && (
+        <TouchableOpacity style={[styles.button, { marginHorizontal: 16, marginTop: 12, marginBottom: 12 }]} onPress={onCreateTask}>
+          <Text style={styles.buttonText}>➕ Create Task</Text>
+        </TouchableOpacity>
+      )}
 
       <FlatList
         data={tasks}
