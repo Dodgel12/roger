@@ -8,7 +8,7 @@ import secrets
 import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
-from database import get_db_connection, init_core_skills
+from database import get_db_connection
 
 # In production, use a strong secret key from environment
 AUTH_SECRET = os.getenv("AUTH_SECRET", "change-this-in-production-use-strong-key")
@@ -63,9 +63,6 @@ def create_user(username: str, password: str) -> Tuple[bool, str, Optional[str]]
 
     conn.commit()
     conn.close()
-
-    # Initialize core skills for new user
-    init_core_skills(user_id)
 
     return True, "User created successfully", token
 

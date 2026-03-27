@@ -5,8 +5,7 @@ import {
   KeyboardAvoidingView,
   FlatList,
   StatusBar,
-  ActivityIndicator,
-  AsyncStorage
+  ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
@@ -14,7 +13,7 @@ import * as Network from 'expo-network';
 
 // Custom imports
 import { styles } from "./src/styles/styles";
-import { configureNotifications, registerForPushNotificationsAsync, setupNotificationListeners, getFirebaseToken } from "./src/services/notificationService";
+import { configureNotifications, registerForPushNotificationsAsync, setupNotificationListeners } from "./src/services/notificationService";
 import { authService, createAuthenticatedClient } from "./src/services/authService";
 import Header from "./src/components/Header";
 import MessageBubble from "./src/components/MessageBubble";
@@ -44,8 +43,7 @@ export default function App() {
   const notificationListener = useRef();
   const tapListener = useRef();
   const cleanupNotifications = useRef(null);
-  const chatLoadTimeout = useRef(null);
-  
+
   // Check if user is authenticated on app load
   useEffect(() => {
     const checkAuth = async () => {
@@ -86,57 +84,28 @@ export default function App() {
           
           const client = await createAuthenticatedClient(currentServerUrl);
           await client.post("/register-push-token", { token });
-          console.log("✅ Expo token registered successfully");
+          console.log("✅ Push token registered successfully");
         } catch (err) {
           if (err.response?.status === 401) {
             console.error("❌ Push token registration failed - Authentication error (401). Token may be invalid or expired.");
           } else {
-            console.error("Error registering Expo token:", err.message);
+            console.error("Error registering push token:", err.message);
           }
         }
       } else {
-        console.log("No Expo push token obtained");
-      }
-
-      // Register Firebase FCM token
-      const firebaseToken = await getFirebaseToken();
-      if (firebaseToken) {
-        try {
-          const authToken = await authService.getToken();
-          console.log("Firebase token obtained for registration:", !!authToken);
-          
-          const client = await createAuthenticatedClient(currentServerUrl);
-          await client.post("/firebase/register-token", { device_token: firebaseToken });
-          console.log("✅ Firebase FCM token registered successfully");
-        } catch (err) {
-          if (err.response?.status === 401) {
-            console.error("❌ Firebase token registration failed - Authentication error (401).");
-          } else {
-            console.error("Error registering Firebase token:", err.message);
-          }
-        }
-      } else {
-        console.log("⚠️ Failed to obtain Firebase FCM token");
+        console.log("No push token obtained from Expo");
       }
 
       // Setup notification listeners
       cleanupNotifications.current = setupNotificationListeners();
 
-      // Listen for notifications with debouncing to prevent duplicate message loads
+      // Listen for notifications
       notificationListener.current = Notifications.addNotificationReceivedListener(() => {
-        // Debounce: clear previous timeout and set a new one
-        if (chatLoadTimeout.current) clearTimeout(chatLoadTimeout.current);
-        chatLoadTimeout.current = setTimeout(() => {
-          loadChatHistory(currentServerUrl);
-        }, 500);
+        loadChatHistory(currentServerUrl);
       });
 
       tapListener.current = Notifications.addNotificationResponseReceivedListener(() => {
-        // Debounce: clear previous timeout and set a new one
-        if (chatLoadTimeout.current) clearTimeout(chatLoadTimeout.current);
-        chatLoadTimeout.current = setTimeout(() => {
-          loadChatHistory(currentServerUrl);
-        }, 500);
+        loadChatHistory(currentServerUrl);
       });
 
     } catch (err) {
@@ -273,7 +242,6 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
-      
       <Header onLogout={handleLogout} />
 
       {activeTab === "chat" && (

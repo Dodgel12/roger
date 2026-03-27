@@ -45,7 +45,6 @@ def init_db():
             start_time TEXT,
             duration TEXT,
             completed INTEGER DEFAULT 0,
-            is_recurring INTEGER DEFAULT 1,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
@@ -205,25 +204,6 @@ def complete_task(user_id: int, task_id: int):
     
     return True
 
-def delete_task(user_id: int, task_id: int) -> bool:
-    """Delete a task and its associated skill links. Returns True if successful, False if task not found."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Verify task belongs to user
-    cursor.execute("SELECT id FROM tasks WHERE user_id = ? AND id = ?", (user_id, task_id))
-    if not cursor.fetchone():
-        conn.close()
-        return False
-    
-    # Delete task and associated skill links
-    cursor.execute("DELETE FROM task_skills WHERE task_id = ?", (task_id,))
-    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
-    
-    conn.commit()
-    conn.close()
-    return True
-
 def get_today_stats(user_id: int):
     """Return planned/completed counts and discipline score for today."""
     day = datetime.now().strftime("%A")
@@ -263,32 +243,14 @@ def get_all_tasks(user_id: int):
     conn.close()
     return schedule
 
-def add_task(user_id: int, name: str, day_of_week: str, start_time: str, duration: str, skill_name: str = None, is_recurring: bool = True):
-    """Add a task for a user, optionally linking it to a skill. is_recurring=True repeats weekly, False is one-time only."""
+def add_task(user_id: int, name: str, day_of_week: str, start_time: str, duration: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO tasks (user_id, name, day_of_week, start_time, duration, is_recurring) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, name, day_of_week, start_time, duration, 1 if is_recurring else 0)
+        "INSERT INTO tasks (user_id, name, day_of_week, start_time, duration) VALUES (?, ?, ?, ?, ?)",
+        (user_id, name, day_of_week, start_time, duration)
     )
     conn.commit()
-    task_id = cursor.lastrowid
-    
-    # Link to skill if provided
-    if skill_name:
-        cursor.execute(
-            "SELECT id FROM skills WHERE user_id = ? AND LOWER(name) = LOWER(?)",
-            (user_id, skill_name)
-        )
-        skill_row = cursor.fetchone()
-        if skill_row:
-            skill_id = skill_row["id"]
-            cursor.execute(
-                "INSERT INTO task_skills (user_id, task_id, skill_id) VALUES (?, ?, ?)",
-                (user_id, task_id, skill_id)
-            )
-            conn.commit()
-    
     conn.close()
 
 # --------------------------
@@ -552,8 +514,8 @@ def get_skill_stats(user_id: int, skill_id: int):
     return skill
 
 def init_core_skills(user_id: int):
-    """Initialize 6 core skills for a new user: Coding, Guitar, Blender, Fitness, Singing, Content Creation."""
-    core_skills = ["Coding", "Guitar", "Blender", "Fitness", "Singing", "Content Creation"]
+    """Initialize 4 core skills for a new user: Coding, Guitar, Blender, Fitness."""
+    core_skills = ["Coding", "Guitar", "Blender", "Fitness"]
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -567,20 +529,9 @@ def init_core_skills(user_id: int):
     conn.close()
 
 def get_user_skills_list(user_id: int):
-    """Get all skills for user as a simple list with id and name. Auto-initializes if missing."""
+    """Get all skills for user as a simple list with id and name."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    # Check if user has any skills
-    cursor.execute("SELECT COUNT(*) as count FROM skills WHERE user_id = ?", (user_id,))
-    count = cursor.fetchone()["count"]
-    
-    # If no skills exist, initialize them
-    if count == 0:
-        conn.close()
-        init_core_skills(user_id)
-        conn = get_db_connection()
-        cursor = conn.cursor()
     
     cursor.execute(
         "SELECT id, name FROM skills WHERE user_id = ? ORDER BY name",
@@ -591,14 +542,14 @@ def get_user_skills_list(user_id: int):
     
     return [dict(r) for r in rows]
 
-def create_task(user_id: int, name: str, day_of_week: str, start_time: str = "", duration: str = "", skill_id: int = None, is_recurring: bool = True):
-    """Create a new task with optional skill linking. is_recurring=True repeats weekly, False is one-time only."""
+def create_task(user_id: int, name: str, day_of_week: str, start_time: str = "", duration: str = "", skill_id: int = None):
+    """Create a new task with optional skill linking."""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute(
-        "INSERT INTO tasks (user_id, name, day_of_week, start_time, duration, is_recurring) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, name, day_of_week, start_time, duration, 1 if is_recurring else 0)
+        "INSERT INTO tasks (user_id, name, day_of_week, start_time, duration) VALUES (?, ?, ?, ?, ?)",
+        (user_id, name, day_of_week, start_time, duration)
     )
     conn.commit()
     task_id = cursor.lastrowid

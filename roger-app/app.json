@@ -2,7 +2,7 @@
   "expo": {
     "androidNavigationBar": {
       "visible": "sticky-immersive",
-      "backgroundColor": "#00000000"
+      "backgroundColor": "#00000000" 
     },
     "name": "roger-app",
     "slug": "roger-app",
@@ -35,10 +35,6 @@
       "eas": {
         "projectId": "baccc1a7-865b-48cb-b630-07e6d2b9995c"
       }
-    },
-    "plugins": [
-      "expo-font",
-      "expo-secure-store"
-    ]
+    }
   }
 }
