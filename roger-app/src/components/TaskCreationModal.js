@@ -19,6 +19,8 @@ export default function TaskCreationModal({ visible, onClose, serverUrl, createA
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(true);
 
   useEffect(() => {
     if (visible) {
@@ -28,11 +30,20 @@ export default function TaskCreationModal({ visible, onClose, serverUrl, createA
 
   const loadSkills = async () => {
     try {
+      setSkillsLoading(true);
       const client = await createAuthenticatedClient(serverUrl);
       const res = await client.get("/skills/all");
-      setSkills(res.data.skills || []);
+      if (res.data.skills && Array.isArray(res.data.skills)) {
+        setSkills(res.data.skills);
+      } else {
+        console.warn("Skills endpoint returned unexpected format:", res.data);
+        setSkills([]);
+      }
     } catch (err) {
       console.warn("Error loading skills:", err.message);
+      setSkills([]);
+    } finally {
+      setSkillsLoading(false);
     }
   };
 
@@ -46,13 +57,14 @@ export default function TaskCreationModal({ visible, onClose, serverUrl, createA
       setLoading(true);
       const client = await createAuthenticatedClient(serverUrl);
       
-      const params = selectedSkill ? { skill_id: selectedSkill } : {};
       const res = await client.post("/tasks/create", {
         name,
         day_of_week: day,
         start_time: startTime,
         duration,
-      }, { params });
+        skill_id: selectedSkill || null,
+        is_recurring: isRecurring,
+      });
 
       Alert.alert("✅ Success", "Task created!");
       setName("");
@@ -60,6 +72,7 @@ export default function TaskCreationModal({ visible, onClose, serverUrl, createA
       setStartTime("09:00");
       setDuration("1H");
       setSelectedSkill(null);
+      setIsRecurring(true);
       
       if (onTaskCreated) onTaskCreated();
       onClose();
@@ -116,9 +129,31 @@ export default function TaskCreationModal({ visible, onClose, serverUrl, createA
               onChangeText={setDuration}
             />
 
-            <Text style={{ marginTop: 16, marginBottom: 8, fontWeight: "600" }}>🎯 Link to Skill (Optional)</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, marginBottom: 16, paddingHorizontal: 12, backgroundColor: "#F0F0F0", borderRadius: 8, padding: 12 }}>
+              <Text style={{ flex: 1, fontWeight: "600", color: "#1A1A1A" }}>🔄 Repeat Weekly?</Text>
+              <TouchableOpacity
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  backgroundColor: isRecurring ? "#3182CE" : "#DDD",
+                  borderRadius: 6,
+                }}
+                onPress={() => setIsRecurring(!isRecurring)}
+              >
+                <Text style={{ color: isRecurring ? "#FFF" : "#666", fontWeight: "600" }}>
+                  {isRecurring ? "Yes" : "Once"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ marginTop: 8, marginBottom: 12, fontWeight: "600" }}>🎯 Link to Skill (Optional)</Text>
             <View style={{ borderWidth: 1, borderColor: "#DDD", borderRadius: 8, maxHeight: 150 }}>
-              {skills.length > 0 ? (
+              {skillsLoading ? (
+                <View style={{ padding: 12, justifyContent: "center", alignItems: "center" }}>
+                  <ActivityIndicator size="small" color="#3182CE" />
+                  <Text style={{ marginTop: 8, color: "#666", fontSize: 12 }}>Loading skills...</Text>
+                </View>
+              ) : skills.length > 0 ? (
                 <ScrollView>
                   {skills.map(skill => (
                     <TouchableOpacity

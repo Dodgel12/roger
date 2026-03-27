@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import messaging from '@react-native-firebase/messaging';
 
 // Notification configuration
 export const configureNotifications = () => {
@@ -101,3 +102,29 @@ export const setupNotificationListeners = () => {
     Notifications.removeNotificationSubscription(responseSubscription);
   };
 };
+
+// Get Firebase FCM Token
+export async function getFirebaseToken() {
+  try {
+    // Request permission first
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      console.log('🔥 Firebase messaging permission granted');
+      
+      // Get the FCM token
+      const fcmToken = await messaging().getToken();
+      console.log('🔥 Firebase FCM Token:', fcmToken);
+      return fcmToken;
+    } else {
+      console.warn('⚠️ Firebase messaging permission denied');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error getting Firebase token:', error);
+    return null;
+  }
+}

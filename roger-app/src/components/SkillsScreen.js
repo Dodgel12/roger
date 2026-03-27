@@ -301,32 +301,7 @@ export default function SkillsScreen({ serverUrl, createAuthenticatedClient }) {
             )}
           />
         )}
-
-        {/* Info Box */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: "#EBF8FF",
-              borderLeftWidth: 4,
-              borderLeftColor: "#3182CE",
-              marginTop: 20,
-            },
-          ]}
-        >
-          <Text style={{ fontSize: 12, fontWeight: "600", color: "#1A1A1A", marginBottom: 8 }}>
-            💡 How Skills Work
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18, marginBottom: 8 }}>
-            • Link tasks to skills to track progress automatically
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18, marginBottom: 8 }}>
-            • Each completed task adds 1 hour to the skill
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18 }}>
-            • Watch your skill progress accumulate over time
-          </Text>
-        </View>
+        
       </View>
     </ScrollView>
   );

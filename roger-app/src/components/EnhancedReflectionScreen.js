@@ -151,24 +151,6 @@ export default function EnhancedReflectionScreen({ serverUrl, createAuthenticate
           </View>
         ) : null}
 
-        {/* Tips Section */}
-        <View style={[styles.card, { backgroundColor: "#EBF8FF", borderLeftWidth: 4, borderLeftColor: "#3182CE" }]}>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: "#1A1A1A", marginBottom: 12 }}>
-            💡 Reflection Tips
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18, marginBottom: 10 }}>
-            • Be specific. Name habits, not feelings.
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18, marginBottom: 10 }}>
-            • Focus on what you controlled.
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18, marginBottom: 10 }}>
-            • Identify patterns, not excuses.
-          </Text>
-          <Text style={{ fontSize: 12, color: "#2D3748", lineHeight: 18 }}>
-            • Use this for next week's improvement.
-          </Text>
-        </View>
       </View>
     </ScrollView>
   );
