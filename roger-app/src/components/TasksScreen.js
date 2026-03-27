@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { createAuthenticatedClient } from '../services/authService';
 import { styles } from '../styles/styles';
 
@@ -48,24 +48,57 @@ const TasksScreen = ({ serverUrl, createAuthenticatedClient: authenticatedClient
     }
   };
 
+  const deleteTask = async (taskId) => {
+    Alert.alert(
+      "Delete Task",
+      "Are you sure you want to delete this task?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const client = await createAuthenticatedClient(serverUrl);
+              await client.delete(`/tasks/${taskId}`);
+              fetchTasksAndStats();
+              Alert.alert("✅ Deleted", "Task deleted successfully");
+            } catch (err) {
+              Alert.alert("❌ Error", "Failed to delete task");
+              console.warn("Failed to delete task:", err.message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderTask = ({ item }) => (
-    <TouchableOpacity 
-      style={[styles.taskCard, item.completed ? styles.taskCardDone : styles.taskCardActive]}
-      activeOpacity={0.7}
-      onPress={() => toggleTask(item.id, item.completed)}
-    >
-      <View style={styles.taskInfo}>
-        <Text style={[styles.taskName, item.completed && styles.taskNameDone]}>
-          {item.name}
-        </Text>
-        <Text style={styles.taskTime}>
-          {item.start_time} • {item.duration}
-        </Text>
-      </View>
-      <View style={[styles.checkbox, item.completed && styles.checkboxDone]}>
-        {item.completed && <View style={styles.checkmark} />}
-      </View>
-    </TouchableOpacity>
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+      <TouchableOpacity 
+        style={[styles.taskCard, item.completed ? styles.taskCardDone : styles.taskCardActive, { flex: 1 }]}
+        activeOpacity={0.7}
+        onPress={() => toggleTask(item.id, item.completed)}
+      >
+        <View style={styles.taskInfo}>
+          <Text style={[styles.taskName, item.completed && styles.taskNameDone]}>
+            {item.name}
+          </Text>
+          <Text style={styles.taskTime}>
+            {item.start_time} • {item.duration}
+          </Text>
+        </View>
+        <View style={[styles.checkbox, item.completed && styles.checkboxDone]}>
+          {item.completed && <View style={styles.checkmark} />}
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{ padding: 8, marginLeft: 4 }}
+        onPress={() => deleteTask(item.id)}
+      >
+        <Text style={{ fontSize: 18, color: '#FF6B6B' }}>🗑️</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   const percent = Math.round(stats.score * 100);
