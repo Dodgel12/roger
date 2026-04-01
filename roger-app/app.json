@@ -32,6 +32,10 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "apiBaseUrlLan": "http://192.168.1.56:8000",
+      "apiBaseUrlNgrok": "https://subporphyritic-venomless-delores.ngrok-free.dev",
+      "apiBaseUrlWeb": "http://192.168.1.56:8000",
+      "apiBaseUrlNative": "https://subporphyritic-venomless-delores.ngrok-free.dev",
       "eas": {
         "projectId": "baccc1a7-865b-48cb-b630-07e6d2b9995c"
       }

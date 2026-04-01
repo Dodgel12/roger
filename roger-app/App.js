@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import * as Network from 'expo-network';
+import Constants from "expo-constants";
 
 // Custom imports
 import { styles } from "./src/styles/styles";
@@ -31,12 +32,24 @@ import { TouchableOpacity, Text } from "react-native";
 // Initialize notification configuration
 configureNotifications();
 
+function resolveInitialServerUrl() {
+  const extra = Constants?.expoConfig?.extra || Constants?.easConfig?.extra || {};
+  const lanUrl = extra.apiBaseUrlLan || "http://192.168.1.56:8000";
+  const ngrokUrl = extra.apiBaseUrlNgrok || "https://subporphyritic-venomless-delores.ngrok-free.dev";
+
+  if (Platform.OS === "web") {
+    return extra.apiBaseUrlWeb || lanUrl;
+  }
+
+  return extra.apiBaseUrlNative || ngrokUrl || lanUrl;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("chat");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [serverUrl, setServerUrl] = useState("https://subporphyritic-venomless-delores.ngrok-free.dev");
+  const [serverUrl, setServerUrl] = useState(resolveInitialServerUrl);
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -76,6 +89,10 @@ export default function App() {
 
       // Load initial chat history
       await loadChatHistory(currentServerUrl);
+
+      if (Platform.OS === "web") {
+        return;
+      }
 
       // Register for push notifications
       const token = await registerForPushNotificationsAsync();
@@ -266,7 +283,19 @@ export default function App() {
 
   // Show login screen if not authenticated
   if (!isAuthenticated) {
-    return <LoginScreen serverUrl={serverUrl} onAuthSuccess={handleAuthSuccess} />;
+    const extra = Constants?.expoConfig?.extra || Constants?.easConfig?.extra || {};
+    const lanUrl = extra.apiBaseUrlLan || "http://192.168.1.56:8000";
+    const ngrokUrl = extra.apiBaseUrlNgrok || "https://subporphyritic-venomless-delores.ngrok-free.dev";
+
+    return (
+      <LoginScreen
+        serverUrl={serverUrl}
+        lanUrl={lanUrl}
+        ngrokUrl={ngrokUrl}
+        onServerUrlChange={setServerUrl}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    );
   }
 
   // Main app view

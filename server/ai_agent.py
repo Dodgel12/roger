@@ -1,10 +1,15 @@
 import os
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from dotenv import load_dotenv
-from database import get_all_tasks, get_today_stats, get_recent_reflections, get_weekly_stats
+from database import get_all_tasks, get_tasks_for_day, get_today_stats, get_recent_reflections, get_weekly_stats
 
-TZ = timezone(timedelta(hours=1))  # CET is UTC+1
+try:
+    from database import get_app_now
+except ImportError:
+    def get_app_now():
+        """Fallback for older database.py versions that do not expose get_app_now."""
+        return datetime.now().astimezone()
 
 load_dotenv()
 
@@ -39,6 +44,16 @@ def build_stats_string(user_id: int) -> str:
     percent = int(stats["score"] * 100)
     return f"Today's completion: {completed}/{planned} tasks ({percent}%)"
 
+
+def build_today_tasks_string(user_id: int, today_name: str) -> str:
+    """Build explicit today-only task list to avoid day confusion in model responses."""
+    tasks = get_tasks_for_day(user_id, today_name)
+    if not tasks:
+        return f"No tasks scheduled for {today_name}."
+
+    items = [f"- {name} at {start or 'unspecified time'} for {dur or 'unspecified duration'}" for name, start, dur in tasks]
+    return "\n".join(items)
+
 def build_reflections_string(user_id: int) -> str:
     """Build a string from recent reflections for AI context."""
     reflections = get_recent_reflections(user_id, 3)
@@ -50,8 +65,36 @@ def build_reflections_string(user_id: int) -> str:
         parts.append(f"- On {r['timestamp']}: 'Went well: {r['went_well']}', 'Slowed down: {r['slowed_down']}'")
     return "\n".join(parts)
 
+
+def _is_today_tasks_query(message: str) -> bool:
+    """Detect user intents asking for today's/remaining tasks."""
+    msg = message.lower()
+    today_words = ("today", "todays", "today's")
+    task_words = ("task", "tasks", "schedule", "remaining", "remain", "left")
+    return any(w in msg for w in today_words) and any(w in msg for w in task_words)
+
+
+def build_remaining_tasks_reply(user_id: int, today_name: str) -> str:
+    """Generate deterministic reply for today's remaining tasks from DB."""
+    tasks = get_tasks_for_day(user_id, today_name)
+    if not tasks:
+        return f"You have no remaining tasks for {today_name}. Use this time intentionally and plan your next win."
+
+    lines = [f"Remaining tasks for {today_name}:\n"]
+    for name, start, dur in tasks:
+        start_txt = start if start else "unspecified time"
+        dur_txt = dur if dur else "unspecified duration"
+        lines.append(f"- {name} at {start_txt} for {dur_txt}")
+    lines.append("Stay sharp: finish these one by one.")
+    return "\n".join(lines)
+
 def ask_roger(user_id: int, message: str) -> str:
-    now = datetime.now(TZ).strftime("%A, %d %B %Y %H:%M %Z")
+    now_dt = get_app_now()
+    now = now_dt.strftime("%A, %d %B %Y %H:%M %Z")
+    today_name = now_dt.strftime("%A")
+
+    if _is_today_tasks_query(message):
+        return build_remaining_tasks_reply(user_id, today_name)
 
     if not GROQ_API_KEY:
         return "Error: GROQ_API_KEY not found in environment."
@@ -59,19 +102,25 @@ def ask_roger(user_id: int, message: str) -> str:
     # Build live schedule from DB
     schedule = build_schedule_string(user_id)
     stats_str = build_stats_string(user_id)
+    today_tasks_str = build_today_tasks_string(user_id, today_name)
     reflections_str = build_reflections_string(user_id)
 
     prompt = f"""
-You are Roger, a strict accountability coach.
+You are Roger, an accountability coach.
 
 RULES:
 - Only output the final answer. NOTHING ELSE.
-- Max 4 sentences. Be concise, motivating, strict.
+- Be concise, motivating.
 - Base your advice on the current time and user's schedule.
 - Use the user's past reflections to give highly personalized, targeted advice.
+- If the user asks for "today" or "today's tasks", use ONLY the explicit Today's Tasks list below.
 
 Current time: {now}
+Today is: {today_name}
 {stats_str}
+
+Today's Tasks:
+{today_tasks_str}
 
 User's past reflections:
 {reflections_str}
@@ -125,7 +174,7 @@ User message: {message}
 
 def generate_weekly_analysis(user_id: int) -> str:
     """Generate AI-powered weekly analysis and advice."""
-    now = datetime.now(TZ).strftime("%A, %d %B %Y")
+    now = get_app_now().strftime("%A, %d %B %Y")
 
     if not GROQ_API_KEY:
         return "Error: GROQ_API_KEY not found in environment."

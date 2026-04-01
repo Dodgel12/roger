@@ -70,3 +70,4 @@ echo -e "  1. Restart the server: ${GREEN}./start_roger.sh${NC}"
 echo -e "  2. New users will auto-initialize core skills on registration"
 echo ""
 
+

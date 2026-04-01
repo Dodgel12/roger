@@ -1,8 +1,45 @@
 import sqlite3
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "roger.db")
+
+
+def _last_sunday(year: int, month: int):
+    last_day = datetime(year, month + 1, 1) - timedelta(days=1) if month < 12 else datetime(year, 12, 31)
+    return last_day - timedelta(days=(last_day.weekday() + 1) % 7)
+
+
+def _manual_europe_tz_now(tz_name: str) -> datetime:
+    """Fallback for Europe/Rome and Europe/Berlin when zoneinfo isn't available.
+    Uses EU DST rules: starts last Sunday of March 01:00 UTC, ends last Sunday of October 01:00 UTC.
+    """
+    now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+    year = now_utc.year
+    dst_start = _last_sunday(year, 3).replace(hour=1, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    dst_end = _last_sunday(year, 10).replace(hour=1, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    offset_hours = 2 if dst_start <= now_utc < dst_end else 1
+    return now_utc.astimezone(timezone(timedelta(hours=offset_hours)))
+
+
+def get_app_now() -> datetime:
+    """Return timezone-aware current time based on APP_TIMEZONE."""
+    tz_name = os.getenv("APP_TIMEZONE", "Europe/Rome")
+    if ZoneInfo is not None:
+        try:
+            return datetime.now(ZoneInfo(tz_name))
+        except Exception:
+            pass
+
+    if tz_name in ("Europe/Rome", "Europe/Berlin", "CET", "CEST"):
+        return _manual_europe_tz_now(tz_name)
+
+    return datetime.now().astimezone()
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -144,7 +181,7 @@ def get_tasks_for_day(user_id: int, day: str):
 
 def get_tasks_for_today(user_id: int):
     """Return all of today's tasks with IDs and completion status."""
-    day = datetime.now().strftime("%A")
+    day = get_app_now().strftime("%A")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -166,7 +203,7 @@ def get_tasks_for_today(user_id: int):
 
 def complete_task(user_id: int, task_id: int):
     """Mark a task as completed and log it in the completions table. Also update skill progress."""
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = get_app_now().strftime("%Y-%m-%d")
     conn = get_db_connection()
     cursor = conn.cursor()
     # Get task name first (verify it belongs to user)
@@ -226,7 +263,7 @@ def delete_task(user_id: int, task_id: int) -> bool:
 
 def get_today_stats(user_id: int):
     """Return planned/completed counts and discipline score for today."""
-    day = datetime.now().strftime("%A")
+    day = get_app_now().strftime("%A")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) as total FROM tasks WHERE user_id = ? AND day_of_week = ?", (user_id, day))
@@ -613,5 +650,6 @@ def create_task(user_id: int, name: str, day_of_week: str, start_time: str = "",
     
     conn.close()
     return task_id
+
 
 

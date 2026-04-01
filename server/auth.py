@@ -161,3 +161,4 @@ def extract_token_from_header(auth_header: str) -> Optional[str]:
     if len(parts) == 2 and parts[0].lower() == "bearer":
         return parts[1]
     return None
+

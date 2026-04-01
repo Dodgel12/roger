@@ -115,3 +115,4 @@ class FirebaseService:
 def get_firebase_service():
     """Get singleton Firebase service instance"""
     return FirebaseService()
+

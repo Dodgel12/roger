@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,32 @@ import {
 import { authService } from '../services/authService';
 import { styles } from '../styles/styles';
 
-export default function LoginScreen({ serverUrl, onAuthSuccess }) {
+export default function LoginScreen({
+  serverUrl,
+  lanUrl,
+  ngrokUrl,
+  onServerUrlChange = () => {},
+  onAuthSuccess,
+}) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [currentServerUrl, setCurrentServerUrl] = useState(serverUrl || '');
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true); // true = login, false = register
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    setCurrentServerUrl(serverUrl || '');
+  }, [serverUrl]);
+
   const handleAuth = async () => {
+    const normalizedServerUrl = (currentServerUrl || '').trim().replace(/\/+$/, '');
+
+    if (!normalizedServerUrl) {
+      setError('Server URL is required');
+      return;
+    }
+
     if (!username.trim() || !password.trim()) {
       setError('Username and password are required');
       return;
@@ -35,9 +53,11 @@ export default function LoginScreen({ serverUrl, onAuthSuccess }) {
     setError('');
 
     try {
+      onServerUrlChange(normalizedServerUrl);
+
       const result = isLogin
-        ? await authService.login(username, password, serverUrl)
-        : await authService.register(username, password, serverUrl);
+        ? await authService.login(username, password, normalizedServerUrl)
+        : await authService.register(username, password, normalizedServerUrl);
 
       if (result.success) {
         Alert.alert(
@@ -70,6 +90,49 @@ export default function LoginScreen({ serverUrl, onAuthSuccess }) {
           </View>
 
           <View style={styles.loginForm}>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#DDD',
+                  backgroundColor: currentServerUrl === lanUrl ? '#F0F7FF' : '#FFF',
+                }}
+                disabled={loading || !lanUrl}
+                onPress={() => setCurrentServerUrl(lanUrl || '')}
+              >
+                <Text style={{ textAlign: 'center', color: '#2A2A2A', fontWeight: '600' }}>LAN</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#DDD',
+                  backgroundColor: currentServerUrl === ngrokUrl ? '#F0F7FF' : '#FFF',
+                }}
+                disabled={loading || !ngrokUrl}
+                onPress={() => setCurrentServerUrl(ngrokUrl || '')}
+              >
+                <Text style={{ textAlign: 'center', color: '#2A2A2A', fontWeight: '600' }}>ngrok</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={styles.loginInput}
+              placeholder="Server URL (es: http://192.168.1.56:8000)"
+              placeholderTextColor="#999"
+              value={currentServerUrl}
+              onChangeText={setCurrentServerUrl}
+              editable={!loading}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
             {/* Username Input */}
             <TextInput
               style={styles.loginInput}

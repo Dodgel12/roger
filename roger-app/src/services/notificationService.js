@@ -1,7 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import messaging from '@react-native-firebase/messaging';
 
 // Notification configuration
 export const configureNotifications = () => {
@@ -15,6 +14,11 @@ export const configureNotifications = () => {
 };
 
 export async function registerForPushNotificationsAsync() {
+  if (Platform.OS === "web") {
+    // Web build does not use Expo native push token flow.
+    return null;
+  }
+
   let token;
   
   if (Platform.OS === 'android') {
@@ -105,7 +109,14 @@ export const setupNotificationListeners = () => {
 
 // Get Firebase FCM Token
 export async function getFirebaseToken() {
+  if (Platform.OS === "web") {
+    return null;
+  }
+
   try {
+    // Lazy-load native Firebase module to avoid web bundling/runtime errors.
+    const messaging = require("@react-native-firebase/messaging").default;
+
     // Request permission first
     const authStatus = await messaging().requestPermission();
     const enabled =

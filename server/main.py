@@ -35,15 +35,24 @@ import re
 
 ALLOWED_ORIGINS = [
     "http://localhost:19000",      # Expo Metro
+    "http://localhost:19006",      # Expo Web
     "http://localhost:8000",       # Dev server
     "http://127.0.0.1:19000",
+    "http://127.0.0.1:19006",
     "http://127.0.0.1:8000",
+    "http://192.168.1.56:8000",    # Home server
+    "http://192.168.1.123:19006",  # Example LAN client (Expo web)
     "https://subporphyritic-venomless-delores.ngrok-free.dev",  # Current ngrok
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^(http://localhost:19000|http://localhost:8000|http://127\.0\.0\.1:19000|http://127\.0\.0\.1:8000|https://.*\.ngrok(?:-free)?\.dev)$",
+    allow_origin_regex=(
+        r"^https?://"
+        r"(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+        r"172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})"
+        r"(:\d+)?$|^https://.*\.ngrok(?:-free)?\.dev$"
+    ),
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
@@ -760,5 +769,6 @@ async def startup_event():
 async def shutdown_event():
     print("🛑 Roger AI Server Shutting Down...")
     scheduler.shutdown()
+
 
 
